@@ -76,7 +76,7 @@ class Streamer(threading.Thread):
             if self.stopped():
                 break
 
-
+# -----------------------------------------------------------------------------
 class Recorder(threading.Thread):
     """
     "Killable Thread" to record a video
