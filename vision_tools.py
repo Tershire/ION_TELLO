@@ -5,6 +5,7 @@ functions and classes for vision-related useful operations for TELLO Edu
 1st written by: Wonhee Lee
 1st written on: 2023 JAN 28
     updated on: 2023 JAN 29; improved the "closure" of thread but is still unsatisfactory
+    updated on: 2023 FEB 05; added Streamer and testing
 guided by: https://github.com/damiafuentes/DJITelloPy
            https://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread
            https://stackoverflow.com/questions/46921161/creating-a-thread-that-stops-when-its-own-stop-flag-is-set
@@ -20,25 +21,68 @@ import threading
 
 # DEF /////////////////////////////////////////////////////////////////////////
 def take_photo(file_name, frame_read):
-    # take a photo
+    """
+    take a photo
+    :param file_name: file name to save
+    :param frame_read: Tello().frame_read
+    :return:
+    """
     cv.imwrite(file_name, frame_read.frame)
 
 
 # -----------------------------------------------------------------------------
 def create_video(file_name, fourcc, fps, frame_read):
-    # create an OpenCV video object
+    """
+    create an OpenCV video object
+    :param file_name: file name to save
+    :param fourcc: 4-character code of codec used to compress video
+    :param fps: frames per second
+    :param frame_read: Tello().frame_read
+    :return: OpenCV video object
+    """
     [h, w, _] = frame_read.frame.shape
     video = cv.VideoWriter(file_name, cv.VideoWriter_fourcc(*fourcc), fps,
                            (w, h))
-    # 2nd param. is 4-character code of codec used to compress the frames
 
     return video
 
 
 # CLASS ///////////////////////////////////////////////////////////////////////
-class recorder(threading.Thread):
+class Streamer(threading.Thread):
+    """
+    "Killable Thread" to show live stream
+    """
+    def __init__(self, frame_read):
+        super(Streamer, self).__init__()
+        self._stop_event = threading.Event()
+
+        self.frame_read = frame_read
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+    def run(self):
+        self.stream_video(self.frame_read)
+
+    def stream_video(self, frame_read):
+        # stream a video
+        while True:
+            cv.imshow('TELLO VIEW', frame_read.frame)
+            cv.waitKey(1)
+
+            if self.stopped():
+                break
+
+
+class Recorder(threading.Thread):
+    """
+    "Killable Thread" to record a video
+    """
     def __init__(self, video, frame_read, fps):
-        super(recorder, self).__init__()
+        super(Recorder, self).__init__()
         self._stop_event = threading.Event()
 
         self.video = video
@@ -59,6 +103,7 @@ class recorder(threading.Thread):
         while True:
             video.write(frame_read.frame)
             time.sleep(1 / fps)
+
             if self.stopped():
                 break
 
