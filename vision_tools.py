@@ -55,7 +55,7 @@ class Streamer(threading.Thread):
     def __init__(self, frame_read):
         super(Streamer, self).__init__()
         self._stop_event = threading.Event()
-
+        # self.timelast = time.time() - 5
         self.frame_read = frame_read
 
     def stop(self):
@@ -75,6 +75,43 @@ class Streamer(threading.Thread):
 
             if self.stopped():
                 break
+
+"""
+    def refresh_5Hz(self):
+        if time.time() - self.timelast >= 1/5:
+            timelast = time.time()
+            fun1
+            fun2
+"""
+
+class CapStreamer(threading.Thread):
+    """
+    "Killable Thread" to show live stream
+    """
+    def __init__(self, cap):
+        super(CapStreamer, self).__init__()
+        self._stop_event = threading.Event()
+        self.cap = cap
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+    def run(self):
+        self.stream_video(self.cap)
+
+    def stream_video(self, cap):
+        # stream a video
+        while True:
+            ret, frame = cap.read()
+            cv.imshow('TELLO VIEW', frame)
+            cv.waitKey(1)
+
+            if self.stopped():
+                break
+
 
 # -----------------------------------------------------------------------------
 class Recorder(threading.Thread):
