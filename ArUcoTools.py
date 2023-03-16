@@ -104,7 +104,10 @@ if __name__ == "__main__":
         detect_marker_cam0.cap.release()
     """
 
-    input("Press Any Key to Stop")    # how can I wait until user do something?
+    # input("Press Any Key to Stop")  # -> this not good method
+
+    while (not keyboard.read_key()):
+        print("running")
 
     # finish Thread
     streamer.stop()
