@@ -15,20 +15,21 @@ guided by: https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 import cv2 as cv
 from cv2 import aruco
 import numpy as np
-import time
 import threading
 import keyboard
 
 
 # SETTING /////////////////////////////////////////////////////////////////////
+# ArUco dictionary choice
+aruco_dict = aruco.DICT_4X4_50
 
 
 # CLASS ///////////////////////////////////////////////////////////////////////
-class DetectMarker:
+class MarkerDetector:
     """
-    continuously detect ArUco Marker viewed on camera
+    detect ArUco Marker viewed on camera
     """
-    dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
+    dictionary = aruco.getPredefinedDictionary(aruco_dict)
     parameters = aruco.DetectorParameters()
 
     def __init__(self, cap):
@@ -47,6 +48,45 @@ class DetectMarker:
         ids = np.ravel(ids)
 
         return corners, ids
+
+
+class PoseEstimator:
+    """
+    estimate pose of a marker
+    """
+    dictionary = aruco.getPredefinedDictionary(aruco_dict)
+    parameters = aruco.DetectorParameters()
+
+    def __init__(self, cap, markerLength, cameraMatrix, distCoeffs):
+        self.cap = cap
+        self.markerLength = markerLength
+        self.cameraMatrix = cameraMatrix
+        self.distCoeffs = distCoeffs
+
+        # marker corners
+        objectPoints0 = np.array([-self.markerLength / 2,  self.markerLength / 2, 0])
+        objectPoints1 = np.array([ self.markerLength / 2,  self.markerLength / 2, 0])
+        objectPoints2 = np.array([ self.markerLength / 2, -self.markerLength / 2, 0])
+        objectPoints3 = np.array([-self.markerLength / 2, -self.markerLength / 2, 0])
+        self.objectPoints = np.array([objectPoints0, objectPoints1, objectPoints2, objectPoints3])
+
+    def get_pose(self, cap, corners, ids, cameraMatrix, distCoeffs):
+        """
+        calculate each marker pose and draw corresponding axes
+        """
+        ret, frame = cap.read()
+
+        if ids[0] is not None:
+            for i in range(len(ids)):
+                # calculate pose for each marker
+                ret, rvec, tvec = cv.solvePnP(self.objectPoints, corners[i], cameraMatrix, distCoeffs)
+
+                print("rvec, tvec:", rvec, tvec)
+
+                # draw axis for each marker
+                cv.drawFrameAxes(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
+
+        return frame
 
 
 class ArUcoStreamer(threading.Thread):
@@ -73,12 +113,12 @@ class ArUcoStreamer(threading.Thread):
             ret, frame = cap.read()
 
             # get ArUco info
-            corners, ids = detect_marker_cam0.get_marker_info(cap)
+            corners, ids = marker_detector.get_marker_info(cap)
             print("ids:", ids)
             # aruco.drawAxis(frame, )
 
-            frame = estimate_pose.get_pose(cap, corners, ids, cameraMatrix, distCoeffs)
-            aruco.drawDetectedMarkers(frame, corners)
+            frame = pose_estimator.get_pose(cap, corners, ids, cameraMatrix, distCoeffs)
+            aruco.drawDetectedMarkers(frame, corners)    # aruco.drawDetectedMarkers(frame, corners, ids): NOT working
 
             cv.imshow('View', frame)
             cv.waitKey(1)
@@ -89,59 +129,24 @@ class ArUcoStreamer(threading.Thread):
                 break
 
 
-class EstimatePose:
-    """
-    estimate pose of a marker
-    """
-    dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
-    parameters = aruco.DetectorParameters()
-
-    def __init__(self, cap, markerLength, cameraMatrix, distCoeffs):
-        self.cap = cap
-        self.markerLength = markerLength
-        self.cameraMatrix = cameraMatrix
-        self.distCoeffs = distCoeffs
-
-        # marker corners
-        objectPoints0 = np.array([-self.markerLength / 2,  self.markerLength / 2, 0])
-        objectPoints1 = np.array([ self.markerLength / 2,  self.markerLength / 2, 0])
-        objectPoints2 = np.array([ self.markerLength / 2, -self.markerLength / 2, 0])
-        objectPoints3 = np.array([-self.markerLength / 2, -self.markerLength / 2, 0])
-        self.objectPoints = np.array([objectPoints0, objectPoints1, objectPoints2, objectPoints3])
-
-    def get_pose(self, cap, corners, ids, cameraMatrix, distCoeffs):
-        ret, frame = cap.read()
-
-        if ids[0] is not None:
-            for i in range(len(ids)):
-                # calculate pose for each marker
-                ret, rvec, tvec = cv.solvePnP(self.objectPoints, corners[i], cameraMatrix, distCoeffs)
-
-                print("rvec, tvec:", rvec, tvec)
-
-                # draw axis for each marker
-                cv.drawFrameAxes(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
-
-        return frame
-
-
 # TEST ////////////////////////////////////////////////////////////////////////
 if __name__ == "__main__":
-    dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
+    dictionary = aruco.getPredefinedDictionary(aruco_dict)
     parameters = aruco.DetectorParameters()
 
     # create object
     camera_id = 0
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(camera_id)
 
+    # temporary trials: actual calibration process must be implemented
     markerLength = 0.175
     cameraMatrix = np.array([[543.05833681, 0.,           326.0951866 ],
                              [0.,           542.67378833, 247.65515938],
                              [0.,           0.,           1.          ]])
     distCoeffs = np.array([-0.28608759, 0.13647301, -0.00076189, 0.0014116, -0.06865808])
 
-    estimate_pose = EstimatePose(cap, markerLength, cameraMatrix, distCoeffs)
-    detect_marker_cam0 = DetectMarker(cap)
+    pose_estimator = PoseEstimator(cap, markerLength, cameraMatrix, distCoeffs)
+    marker_detector = MarkerDetector(cap)
 
     # create Thread
     streamer = ArUcoStreamer(cap)
@@ -149,15 +154,9 @@ if __name__ == "__main__":
     # start Thread
     streamer.start()
 
-    """
-    except KeyboardInterrupt:
-        detect_marker_cam0.cap.release()
-    """
-
-    # input("Press Any Key to Stop")  # -> this not good method
-
-    while (not keyboard.read_key()):
-        print("running")
+    # wait for keyboard
+    while not keyboard.read_key():
+        pass
 
     # finish Thread
     streamer.stop()
