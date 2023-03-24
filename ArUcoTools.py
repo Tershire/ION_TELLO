@@ -74,13 +74,11 @@ class ArUcoStreamer(threading.Thread):
 
             # get ArUco info
             corners, ids = detect_marker_cam0.get_marker_info(cap)
-
-            aruco.drawDetectedMarkers(frame, corners)
-            print("get_marker_id_cam0")
-            print(ids)
+            print("ids:", ids)
             # aruco.drawAxis(frame, )
 
-            estimate_pose.get_pose(cap, corners, ids, cameraMatrix, distCoeffs)
+            frame = estimate_pose.get_pose(cap, corners, ids, cameraMatrix, distCoeffs)
+            aruco.drawDetectedMarkers(frame, corners)
 
             cv.imshow('View', frame)
             cv.waitKey(1)
@@ -114,13 +112,17 @@ class EstimatePose:
     def get_pose(self, cap, corners, ids, cameraMatrix, distCoeffs):
         ret, frame = cap.read()
 
-        if ids:
+        if ids[0] is not None:
             for i in range(len(ids)):
                 # calculate pose for each marker
-                ret, rvecs, tvecs = cv.solvePnP(self.objectPoints, corners[i], cameraMatrix, distCoeffs)
+                ret, rvec, tvec = cv.solvePnP(self.objectPoints, corners[i], cameraMatrix, distCoeffs)
+
+                print("rvec, tvec:", rvec, tvec)
 
                 # draw axis for each marker
-                cv.drawFrameAxes(frame, cameraMatrix, distCoeffs, rvecs, tvecs, 0.1)
+                cv.drawFrameAxes(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
+
+        return frame
 
 
 # TEST ////////////////////////////////////////////////////////////////////////
