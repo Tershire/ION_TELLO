@@ -4,7 +4,8 @@ class for ArUco Markers
 
 1st written by: Wonhee Lee
 1st written on: 2023 MAR 09
-guided by: https://python-academia.com/en/opencv-aruco/
+guided by: https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
+           https://python-academia.com/en/opencv-aruco/
            https://stackoverflow.com/questions/74964527/attributeerror-module-cv2-aruco-has-no-attribute-dictionary-get
            https://github.com/GSNCodes/ArUCo-Markers-Pose-Estimation-Generation-Python/blob/main/pose_estimation.py
            https://gist.github.com/edward1986/ed1ae7f8a10a3d44dc82360a38c4c6b9
@@ -30,22 +31,23 @@ class DetectMarker:
     dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
     parameters = aruco.DetectorParameters()
 
-    def __init__(self, camera_id):
-        self.cap = cv.VideoCapture(camera_id)
+    def __init__(self, cap):
+        self.cap = cap
 
-    def get_marker_info(self):
+    def get_marker_info(self, cap):
         """
         get marker id list
         :return:
         """
-        ret, frame = self.cap.read()
+        ret, frame = cap.read()
         gray = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
 
         detector = aruco.ArucoDetector(dictionary, parameters)
         corners, ids, rejected_img_points = detector.detectMarkers(gray)
         ids = np.ravel(ids)
 
-        return corners, ids, self.cap
+        return corners, ids
+
 
 class ArUcoStreamer(threading.Thread):
     """
@@ -68,14 +70,18 @@ class ArUcoStreamer(threading.Thread):
     def stream_video(self, cap):
         # stream a video
         while True:
-            # get ArUco info
-            corners, ids, _ = detect_marker_cam0.get_marker_info()
-
             ret, frame = cap.read()
+
+            # get ArUco info
+            corners, ids = detect_marker_cam0.get_marker_info(cap)
+
             aruco.drawDetectedMarkers(frame, corners)
             print("get_marker_id_cam0")
             print(ids)
             # aruco.drawAxis(frame, )
+
+            estimate_pose.get_pose(cap, corners, ids, cameraMatrix, distCoeffs)
+
             cv.imshow('View', frame)
             cv.waitKey(1)
 
@@ -85,6 +91,38 @@ class ArUcoStreamer(threading.Thread):
                 break
 
 
+class EstimatePose:
+    """
+    estimate pose of a marker
+    """
+    dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
+    parameters = aruco.DetectorParameters()
+
+    def __init__(self, cap, markerLength, cameraMatrix, distCoeffs):
+        self.cap = cap
+        self.markerLength = markerLength
+        self.cameraMatrix = cameraMatrix
+        self.distCoeffs = distCoeffs
+
+        # marker corners
+        objectPoints0 = np.array([-self.markerLength / 2,  self.markerLength / 2, 0])
+        objectPoints1 = np.array([ self.markerLength / 2,  self.markerLength / 2, 0])
+        objectPoints2 = np.array([ self.markerLength / 2, -self.markerLength / 2, 0])
+        objectPoints3 = np.array([-self.markerLength / 2, -self.markerLength / 2, 0])
+        self.objectPoints = np.array([objectPoints0, objectPoints1, objectPoints2, objectPoints3])
+
+    def get_pose(self, cap, corners, ids, cameraMatrix, distCoeffs):
+        ret, frame = cap.read()
+
+        if ids:
+            for i in range(len(ids)):
+                # calculate pose for each marker
+                ret, rvecs, tvecs = cv.solvePnP(self.objectPoints, corners[i], cameraMatrix, distCoeffs)
+
+                # draw axis for each marker
+                cv.drawFrameAxes(frame, cameraMatrix, distCoeffs, rvecs, tvecs, 0.1)
+
+
 # TEST ////////////////////////////////////////////////////////////////////////
 if __name__ == "__main__":
     dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
@@ -92,9 +130,18 @@ if __name__ == "__main__":
 
     # create object
     camera_id = 0
-    detect_marker_cam0 = DetectMarker(camera_id)
+    cap = cv.VideoCapture(0)
 
-    _, _, cap = detect_marker_cam0.get_marker_info()    # what is better?
+    markerLength = 0.175
+    cameraMatrix = np.array([[543.05833681, 0.,           326.0951866 ],
+                             [0.,           542.67378833, 247.65515938],
+                             [0.,           0.,           1.          ]])
+    distCoeffs = np.array([-0.28608759, 0.13647301, -0.00076189, 0.0014116, -0.06865808])
+
+    estimate_pose = EstimatePose(cap, markerLength, cameraMatrix, distCoeffs)
+    detect_marker_cam0 = DetectMarker(cap)
+
+    # create Thread
     streamer = ArUcoStreamer(cap)
 
     # start Thread
