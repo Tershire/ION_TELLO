@@ -16,17 +16,16 @@ import cv2 as cv
 import numpy as np
 import glob
 
-
 # SETTING /////////////////////////////////////////////////////////////////////
 # termination criteria
-criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001) # yet
+criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)  # yet
 
 # chess board inner grid pattern size (row, col)
 ROW = 9
 COL = 6
 
 # real world object points (3D) in unit: [chess board square] 
-obj_points_0        = np.zeros((ROW * COL, 3), dtype = np.float32) # should be 32? not 64?
+obj_points_0 = np.zeros((ROW * COL, 3), dtype=np.float32)  # should be 32? not 64?
 obj_points_0[:, :2] = np.mgrid[0:ROW, 0:COL].T.reshape(-1, 2)
 
 # load all image file names
@@ -39,27 +38,27 @@ file_names = glob.glob(r'C:\opencv\sources\samples\data\right0*.jpg')
 
 # CHESSBOARD CORNER DETECTION /////////////////////////////////////////////////
 # arrays to store {object, image} points for all images
-obj_points = []; # 3D (real world)
-img_points = []; # 2D (image)
+obj_points = [];  # 3D (real world)
+img_points = [];  # 2D (image)
 
 for file_name in file_names:
     # load image and convert to gray image
-    img  = cv.imread(file_name)
+    img = cv.imread(file_name)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    
+
     # find chess board corners ("why corners is in shape (54, 1, 2)?")
     [ret, corners] = cv.findChessboardCorners(gray, (ROW, COL), None)
     # * ret [bool]: True if found
-    
+
     # if found, append points to arrays
     if ret == True:
         obj_points.append(obj_points_0)
 
         # refine corners ("are the parameters ok?")
         corners_refined = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1),
-                                          criteria)     
+                                          criteria)
         img_points.append(corners_refined)
-        
+
         # draw & display corners
         cv.drawChessboardCorners(img, (ROW, COL), corners_refined, ret)
         cv.imshow('img', img)
@@ -67,31 +66,34 @@ for file_name in file_names:
 
 # close windows        
 # cv.destroyAllWindows()
-    
+
 
 # CALIBRATION /////////////////////////////////////////////////////////////////
 # get camera matrix, distortion coefficients, {rotation, translation) vectors
 # ("are the parameters ok? why [::-1]")
-[ret, cam_matrix, disto_Cs, rvecs, tvecs] = cv.calibrateCamera(obj_points,
-                                                              img_points,
-                                                              gray.shape[::-1],
-                                                              None, None)
-
+[ret, cameraMatrix, distCoeffs, rvecs, tvecs] = cv.calibrateCamera(obj_points,
+                                                                   img_points,
+                                                                   gray.shape[::-1],
+                                                                   None, None)
+print(cameraMatrix)
+print(distCoeffs)
 
 # DISTORTION CORRECTION ///////////////////////////////////////////////////////
-# pick an image to calibrate (get one arbitrary image that is used)
+# pick an image to calibrate (get one arbitrary image that is used) -----------
 file_name = file_names[0]
 img_name = file_name.split('\\')[-1].split('.')
 img = cv.imread(file_name)
 
-# refine camera matrix
-alpha = 1 #"what does this parameter do?"
+# refine camera matrix --------------------------------------------------------
+alpha = 1  # "what does this parameter do?"
 [h, w] = img.shape[:2]
-[cam_matrix_refined, roi] = cv.getOptimalNewCameraMatrix(cam_matrix, disto_Cs, 
-                                                     (w, h), alpha, (w, h))
+[cameraMatrix_refined, roi] = cv.getOptimalNewCameraMatrix(cameraMatrix,
+                                                           distCoeffs,
+                                                           (w, h), alpha,
+                                                           (w, h))
 
-# undistort
-dst = cv.undistort(img, cam_matrix, disto_Cs, None, cam_matrix_refined)
+# undistort -------------------------------------------------------------------
+dst = cv.undistort(img, cameraMatrix, distCoeffs, None, cameraMatrix_refined)
 
 # show & save image
 cv.imshow(img_name[0] + '_calibrated.' + img_name[1], dst)
@@ -99,9 +101,9 @@ cv.waitKey(0)
 
 # cv.imwrite(img_name[0] + '_calibrated.' + img_name[1], dst)
 
-# crop image
+# crop image ------------------------------------------------------------------
 [x, y, w, h] = roi
-dst = dst[y:y+h, x:x+w]
+dst = dst[y:y + h, x:x + w]
 
 # show & save image
 cv.imshow(img_name[0] + '_calibrated' + '(cropped).' + img_name[1], dst)
