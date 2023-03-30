@@ -27,7 +27,7 @@ markerLength = 0.175
 # camera ----------------------------------------------------------------------
 camera_id = 0
 
-# temporary trials: actual calibration process must be implemented
+# temporary trials: actual calibration process must be implementedz
 cameraMatrix = np.array([[543.05833681, 0., 326.0951866],
                          [0., 542.67378833, 247.65515938],
                          [0., 0., 1.]])
