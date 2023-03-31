@@ -3,6 +3,13 @@ test_aruco_pose.py
 get real world pose of ArUco markers wrt. camera pose,
 then displays the pose on 3D quiver plot.
 
+# HOW TO USE
+0) run
+1) key input: space
+   it takes a photo. If ArUco markers are detected, it prints info & plots
+2) key input: esc then esc
+   it closes down
+
 1st written by: Wonhee Lee
 1st written on: 2023 MAR 30
 referred: https://stackoverflow.com/questions/34588464/python-how-to-capture-image-from-webcam-on-click-using-opencv
