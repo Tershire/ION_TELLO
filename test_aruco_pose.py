@@ -1,6 +1,7 @@
 """
 test_aruco_pose.py
-get real world ArUco Marker pose
+get real world pose of ArUco markers wrt. camera pose,
+then displays the pose on 3D quiver plot.
 
 1st written by: Wonhee Lee
 1st written on: 2023 MAR 30
@@ -35,8 +36,6 @@ distCoeffs = np.array([-0.28608759, 0.13647301, -0.00076189, 0.0014116, -0.06865
 
 
 # plot ------------------------------------------------------------------------
-# fig = plt.figure()
-# fig, axs = plt.subplots(2)
 fig = plt.figure(figsize=plt.figaspect(1 / 3))
 axs = []
 for i in range(3):
@@ -94,6 +93,7 @@ class ArUcoStreamer(threading.Thread):
             k = cv.waitKey(1)
 
             if k % 256 == 27:  # esc
+                plt.close()
                 break
 
             elif k % 256 == 32:  # space
@@ -101,7 +101,7 @@ class ArUcoStreamer(threading.Thread):
                 corners, ids = marker_tracker.get_marker_info()
                 print("ids:", ids)
 
-                # get pose
+                # get pose (transformation vectors)
                 rvecs, tvecs, frame = marker_tracker.get_pose(corners, ids)
 
                 # print & plot
@@ -115,16 +115,18 @@ class ArUcoStreamer(threading.Thread):
                         print("rvec:\n", rvec)
                         print("tvec:\n", tvec)
 
-                        R, _ = cv.Rodrigues(rvec)    # R = R_cm so that v_c = R_cm @ v_m
+                        # < R = R_cm so that v_c = R_cm @ v_m >
+                        R, _ = cv.Rodrigues(rvec)    # get rotation matrix
                         # print("Rotation Matrix:\n", R)
 
-                        # plot: p_c = R @ p_m + tvec
-                        posi = tvec    # R @ [0, 0, 0]_m + tvec
-                        dire = R @ unit_z_m    # normal vector of marker in camera frame
+                        # get pose: < p_c = R @ p_m + tvec > then plot
+                        posi = tvec            # posi = R @ [0, 0, 0]_m + tvec = tvec
+                        dire = R @ unit_z_m    # dire: normal vector of marker in camera frame
                         for ax in axs:
-                            ax.quiver(posi[0], posi[1], posi[2], dire[0], dire[1], dire[2], color='b')
+                            ax.quiver(posi[0], posi[1], posi[2],
+                                      dire[0], dire[1], dire[2], color='b')
 
-                        plt.draw()
+                        plt.draw()    # update plot
 
                 # draw
                 cv.aruco.drawDetectedMarkers(frame, corners)
@@ -139,6 +141,7 @@ class ArUcoStreamer(threading.Thread):
 
 
 # EVENT LOOP //////////////////////////////////////////////////////////////////
+# setting ---------------------------------------------------------------------
 # create object
 cap = cv.VideoCapture(camera_id)
 
@@ -151,10 +154,14 @@ streamer = ArUcoStreamer(cap)
 # start Thread
 streamer.start()
 
-# wait for keyboard
+# main thread -----------------------------------------------------------------
+# show plot
 plt.show()
+
+# wait for keyboard
 keyboard.wait("esc")
 
+# ending ----------------------------------------------------------------------
 # finish Thread
 streamer.stop()
 streamer.join()
