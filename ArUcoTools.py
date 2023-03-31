@@ -83,19 +83,21 @@ class MarkerTracker:
         """
         ret, frame = self.cap.read()
 
+        rvecs, tvecs = {}, {}
         if ids[0] is not None:
-            for i in range(len(ids)):
+            for i, id in enumerate(ids):
                 # calculate pose for each marker
                 ret, rvec, tvec = cv.solvePnP(self.objectPoints, corners[i],
                                               self.cameraMatrix, self.distCoeffs)
 
-                print("rvec, tvec:", rvec, tvec)
+                rvecs[id] = rvec
+                tvecs[id] = tvec
 
                 # draw axis for each marker
                 cv.drawFrameAxes(frame, self.cameraMatrix, self.distCoeffs,
                                  rvec, tvec, 0.1)
 
-        return frame
+        return rvecs, tvecs, frame
 
 
 class ArUcoStreamer(threading.Thread):
@@ -125,7 +127,7 @@ class ArUcoStreamer(threading.Thread):
             # aruco.drawAxis(frame, )
 
             # get pose
-            frame = marker_tracker.get_pose(corners, ids)
+            _, _, frame = marker_tracker.get_pose(corners, ids)
 
             # draw
             cv.aruco.drawDetectedMarkers(frame, corners)
