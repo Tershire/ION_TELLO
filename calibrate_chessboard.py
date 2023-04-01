@@ -18,7 +18,11 @@ ROW = 9
 COL = 6
 
 # load all image file
-file_names = glob.glob(r'C:\opencv\sources\samples\data\right0*.jpg')
+dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\'
+camera_name = 'laptop_camera'
+img_format = 'jpg'
+file_names = glob.glob(dir_path + camera_name + '_*' + \
+                                                '.' + f'{img_format}')
 
 # test for one img
 # file_names = [file_names[0]]

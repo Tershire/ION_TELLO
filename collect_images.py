@@ -14,7 +14,7 @@ import CalibrationTools as c_t
 dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\'
 camera_name = 'laptop_camera'
 img_format = 'jpg'
-NUM_IMGS = 3
+NUM_IMGS = 5
 TIME_INTERVAL = 3
 
 # RUN /////////////////////////////////////////////////////////////////////////

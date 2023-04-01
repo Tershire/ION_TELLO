@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0949fd09-c775-4afe-b157-cdb2d4e2cb2c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/collect_images.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CalibrationTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/CalibrationTools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Ref_Code_Archive/streamer_with_text.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/calibrate_chessboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/calibrate_chessboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collect_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/collect_images.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
