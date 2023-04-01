@@ -7,9 +7,8 @@ calibrate camera using chessboard
 """
 
 # IMPORT //////////////////////////////////////////////////////////////////////
-import CalibrationTools as c_t
+import CalibrationTools as cT
 import glob
-
 
 # SETTING /////////////////////////////////////////////////////////////////////
 # calibration -----------------------------------------------------------------
@@ -19,7 +18,7 @@ COL = 6
 
 # load all image file
 dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\'
-camera_name = 'laptop_camera'
+camera_name = 'laptop'
 img_format = 'jpg'
 file_names = glob.glob(dir_path + camera_name + '_*' + \
                                                 '.' + f'{img_format}')
@@ -28,21 +27,19 @@ file_names = glob.glob(dir_path + camera_name + '_*' + \
 # file_names = [file_names[0]]
 
 # data output -----------------------------------------------------------------
-save_data = False
-camera_name = "laptop_camera"
-
+save_data = True
 
 # RUN /////////////////////////////////////////////////////////////////////////
-ret, cameraMatrix, distCoeffs, rvecs, tvecs = c_t.calibrate_chessboard(ROW, COL, file_names)
+ret, cameraMatrix, distCoeffs, rvecs, tvecs = cT.calibrate_chessboard(ROW, COL, file_names)
 
 print(cameraMatrix)
 print(distCoeffs)
 
 # test: undistort
-c_t.undistort(file_names[0], cameraMatrix, distCoeffs, False)
+cT.undistort(file_names[0], cameraMatrix, distCoeffs, False)
 
 # save data
 if save_data:
     dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\' + \
                f'{camera_name}_intrinsics.yml'
-    c_t.save_camera_intrinsics(cameraMatrix, distCoeffs, dir_path)
+    cT.save_camera_intrinsics(cameraMatrix, distCoeffs, dir_path)

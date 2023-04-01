@@ -26,7 +26,6 @@ import keyboard
 import ArUcoTools as a_t
 import matplotlib.pyplot as plt
 
-
 # SETTING /////////////////////////////////////////////////////////////////////
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
@@ -41,7 +40,6 @@ cameraMatrix = np.array([[543.05833681, 0., 326.0951866],
                          [0., 542.67378833, 247.65515938],
                          [0., 0., 1.]])
 distCoeffs = np.array([-0.28608759, 0.13647301, -0.00076189, 0.0014116, -0.06865808])
-
 
 # plot ------------------------------------------------------------------------
 fig = plt.figure(figsize=plt.figaspect(1 / 3))
@@ -113,7 +111,7 @@ class ArUcoStreamer(threading.Thread):
                 rvecs, tvecs, frame = marker_tracker.get_pose(corners, ids)
 
                 # print & plot
-                unit_z_m = np.array([0, 0, 1])    # unit-z vector in marker (model) frame
+                unit_z_m = np.array([0, 0, 1])  # unit-z vector in marker (model) frame
                 if ids[0] is not None:
                     for id in ids:
                         tvec = tvecs[id]
@@ -124,17 +122,17 @@ class ArUcoStreamer(threading.Thread):
                         print("tvec:\n", tvec)
 
                         # < R = R_cm so that v_c = R_cm @ v_m >
-                        R, _ = cv.Rodrigues(rvec)    # get rotation matrix
+                        R, _ = cv.Rodrigues(rvec)  # get rotation matrix
                         # print("Rotation Matrix:\n", R)
 
                         # get pose: < p_c = R @ p_m + tvec > then plot
-                        posi = tvec            # posi = R @ [0, 0, 0]_m + tvec = tvec
-                        dire = R @ unit_z_m    # dire: normal vector of marker in camera frame
+                        posi = tvec  # posi = R @ [0, 0, 0]_m + tvec = tvec
+                        dire = R @ unit_z_m  # dire: normal vector of marker in camera frame
                         for ax in axs:
                             ax.quiver(posi[0], posi[1], posi[2],
                                       dire[0], dire[1], dire[2], color='b')
 
-                        plt.draw()    # update plot
+                        plt.draw()  # update plot
 
                 # draw
                 aruco.drawDetectedMarkers(frame, corners)

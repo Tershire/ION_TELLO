@@ -18,7 +18,6 @@ import numpy as np
 import threading
 import keyboard
 
-
 # SETTING /////////////////////////////////////////////////////////////////////
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
@@ -28,7 +27,7 @@ markerLength = 0.175
 # camera ----------------------------------------------------------------------
 camera_id = 0
 
-# temporary trials: actual calibration process must be implementedz
+# temporary trials: actual calibration process must be implemented
 cameraMatrix = np.array([[543.05833681, 0., 326.0951866],
                          [0., 542.67378833, 247.65515938],
                          [0., 0., 1.]])
@@ -40,6 +39,7 @@ class MarkerTracker:
     """
     detect and estimate pose of each ArUco Marker
     """
+
     def __init__(self, cap, aruco_dict, markerLength, cameraMatrix, distCoeffs):
         self.cap = cap
         self.aruco_dict = aruco_dict
@@ -105,6 +105,7 @@ class ArUcoStreamer(threading.Thread):
     """
     "Killable Thread" to show live stream
     """
+
     def __init__(self, cap):
         super(ArUcoStreamer, self).__init__()
         self._stop_event = threading.Event()

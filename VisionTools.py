@@ -1,6 +1,6 @@
 """
 VisionTools.py
-functions and classes for vision-related useful operations for TELLO Edu
+functions and classes for vision-related useful operations for TELLO Edu drone
 
 1st written by: Wonhee Lee
 1st written on: 2023 JAN 28

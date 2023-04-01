@@ -41,7 +41,7 @@ def collect_images(NUM_IMGS, TIME_INTERVAL, dir_path, camera_name, img_format,
 
             # take and save current frame
             file_name = dir_path + camera_name + '_{:02d}'.format(count) + \
-                                                 '.' + f'{img_format}'
+                        '.' + f'{img_format}'
             cv.imwrite(file_name, frame)
 
             count += 1
@@ -56,6 +56,43 @@ def collect_images(NUM_IMGS, TIME_INTERVAL, dir_path, camera_name, img_format,
                 print('\r', '{:d}'.format(int(remaining_time)), end='')
 
     cap.release()
+    cv.destroyAllWindows()
+
+
+def collect_images_tello(frame_read, NUM_IMGS, TIME_INTERVAL, dir_path, camera_name, img_format):
+    """
+    take series of photos with a given time interval
+    """
+    prev_time = time.time()
+    prev_tick = prev_time
+
+    count = 0
+    while count <= NUM_IMGS:
+        cv.imshow('view', frame_read.frame)
+        k = cv.waitKey(1)
+
+        if count >= NUM_IMGS or k % 256 == 27:  # esc
+            break
+
+        if time.time() - prev_time >= TIME_INTERVAL:
+            prev_time = time.time()
+
+            # take and save current frame
+            file_name = dir_path + camera_name + '_{:02d}'.format(count) + \
+                        '.' + f'{img_format}'
+            cv.imwrite(file_name, frame_read.frame)
+
+            count += 1
+            print(' -> shot:', count)
+
+        else:
+            # countdown for photo shot
+            if time.time() - prev_tick >= 1:
+                prev_tick = time.time()
+
+                remaining_time = TIME_INTERVAL - (time.time() - prev_time) + 1
+                print('\r', '{:d}'.format(int(remaining_time)), end='')
+
     cv.destroyAllWindows()
 
 

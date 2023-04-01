@@ -7,16 +7,15 @@ collect images to be used for camera calibration
 """
 
 # IMPORT //////////////////////////////////////////////////////////////////////
-import CalibrationTools as c_t
-
+import CalibrationTools as cT
 
 # SETTING /////////////////////////////////////////////////////////////////////
 dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\'
-camera_name = 'laptop_camera'
+camera_name = 'laptop'
 img_format = 'jpg'
 NUM_IMGS = 5
 TIME_INTERVAL = 3
 
 # RUN /////////////////////////////////////////////////////////////////////////
-c_t.collect_images(NUM_IMGS, TIME_INTERVAL, dir_path, camera_name, img_format,
-                   camera_id=0)
+cT.collect_images(NUM_IMGS, TIME_INTERVAL, dir_path, camera_name, img_format,
+                  camera_id=0)
