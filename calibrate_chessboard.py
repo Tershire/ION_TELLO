@@ -7,20 +7,25 @@ calibrate camera using chessboard
 """
 
 # IMPORT //////////////////////////////////////////////////////////////////////
-import cv2 as cv
 import CalibrationTools as c_t
 import glob
 
+
 # SETTING /////////////////////////////////////////////////////////////////////
+# calibration -----------------------------------------------------------------
 # chess board inner grid pattern size (row, col)
 ROW = 9
 COL = 6
 
-# load all image file names
+# load all image file
 file_names = glob.glob(r'C:\opencv\sources\samples\data\right0*.jpg')
 
 # test for one img
 # file_names = [file_names[0]]
+
+# data output -----------------------------------------------------------------
+save_data = False
+camera_name = "laptop_camera"
 
 
 # RUN /////////////////////////////////////////////////////////////////////////
@@ -29,6 +34,11 @@ ret, cameraMatrix, distCoeffs, rvecs, tvecs = c_t.calibrate_chessboard(ROW, COL,
 print(cameraMatrix)
 print(distCoeffs)
 
+# test: undistort
+c_t.undistort(file_names[0], cameraMatrix, distCoeffs, False)
+
 # save data
-dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\laptop_camera_intrinsics.yml'
-c_t.save_camera_intrinsics(cameraMatrix, distCoeffs, dir_path)
+if save_data:
+    dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\' + \
+               f'{camera_name}_intrinsics.yml'
+    c_t.save_camera_intrinsics(cameraMatrix, distCoeffs, dir_path)

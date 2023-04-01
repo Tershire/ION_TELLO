@@ -6,16 +6,66 @@ class for Camera Calibration
 1st written on: 2023 APR 01
 guided by: https://medium.com/vacatronics/3-ways-to-calibrate-your-camera-using-opencv-and-python-395528a51615
            https://docs.opencv.org/5.x/dc/dbb/tutorial_py_calibration.html
+referred : https://stackoverflow.com/questions/34950201/pycharm-print-end-r-statement-not-working
 """
 
 # IMPORT //////////////////////////////////////////////////////////////////////
 import cv2 as cv
 import numpy as np
+import time
 
 
 # FUNCTION ////////////////////////////////////////////////////////////////////
 # -----------------------------------------------------------------------------
+def collect_images(NUM_IMGS, TIME_INTERVAL, dir_path, camera_name, img_format,
+                   camera_id):
+    """
+    take series of photos with a given time interval
+    """
+    cap = cv.VideoCapture(camera_id)
+
+    prev_time = time.time()
+    prev_tick = prev_time
+
+    count = 0
+    while count <= NUM_IMGS:
+        ret, frame = cap.read()
+        cv.imshow('view', frame)
+        k = cv.waitKey(1)
+
+        if count >= NUM_IMGS or k % 256 == 27:  # esc
+            break
+
+        if time.time() - prev_time >= TIME_INTERVAL:
+            prev_time = time.time()
+
+            # take and save current frame
+            file_name = dir_path + camera_name + '_{:02d}'.format(count) + \
+                                                 '.' + f'{img_format}'
+            cv.imwrite(file_name, frame)
+
+            count += 1
+            print(' -> shot:', count)
+
+        else:
+            # countdown for photo shot
+            if time.time() - prev_tick >= 1:
+                prev_tick = time.time()
+
+                remaining_time = TIME_INTERVAL - (time.time() - prev_time) + 1
+                print('\r', '{:d}'.format(int(remaining_time)), end='')
+
+    cap.release()
+    cv.destroyAllWindows()
+
+
+# -----------------------------------------------------------------------------
 def calibrate_chessboard(ROW, COL, file_names):
+    """
+    calibrate using chessboard
+    <!> Assumptions:
+        - real world chessboard points are on plane: (x_w, y_w, 0)
+    """
     # SETTING =================================================================
     # termination criteria (for cornerSubPix())
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -65,8 +115,11 @@ def calibrate_chessboard(ROW, COL, file_names):
 
 
 # -----------------------------------------------------------------------------
-def undistort(file_name, cameraMatrix, distCoeffs):
-    img_name = file_name.split('\\')[-1].split('.')
+def undistort(file_name, cameraMatrix, distCoeffs, save_img):
+    """
+    undistort an image then displays it.
+    saves it if save_img == True
+    """
     img = cv.imread(file_name)
     h, w = img.shape[:2]
 
@@ -79,20 +132,26 @@ def undistort(file_name, cameraMatrix, distCoeffs):
     dst = cv.undistort(img, cameraMatrix, distCoeffs, None, cameraMatrix_new)
 
     # show & save image
-    cv.imshow(img_name[0] + '_calibrated.' + img_name[1], dst)
+    cv.imshow(file_name.split('.')[0] + '_calibrated.' +
+              file_name.split('.')[1], dst)
     cv.waitKey(0)
 
-    # cv.imwrite(img_name[0] + '_calibrated.' + img_name[1], dst)
+    if save_img:
+        cv.imwrite(file_name.split('.')[0] + '_calibrated.' +
+                   file_name.split('.')[1], dst)
 
     # crop image --------------------------------------------------------------
     [x, y, w, h] = roi
     dst = dst[y:y + h, x:x + w]
 
     # show & save image
-    cv.imshow(img_name[0] + '_calibrated' + '(cropped).' + img_name[1], dst)
+    cv.imshow(file_name.split('.')[0] + '_calibrated' + '(cropped).' +
+              file_name.split('.')[1], dst)
     cv.waitKey(0)
 
-    # cv.imwrite(img_name[0] + '_calibrated' + '(cropped).' + img_name[1], dst)
+    if save_img:
+        cv.imwrite(file_name.split('.')[0] + '_calibrated' + '(cropped).' +
+                   file_name.split('.')[1], dst)
 
 
 # FUNCTION: HELP //////////////////////////////////////////////////////////////
