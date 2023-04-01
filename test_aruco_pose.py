@@ -19,6 +19,7 @@ referred: https://stackoverflow.com/questions/34588464/python-how-to-capture-ima
 
 # IMPORT //////////////////////////////////////////////////////////////////////
 import cv2 as cv
+import cv2.aruco as aruco
 import numpy as np
 import threading
 import keyboard
@@ -29,7 +30,7 @@ import matplotlib.pyplot as plt
 # SETTING /////////////////////////////////////////////////////////////////////
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
-aruco_dict = cv.aruco.DICT_4X4_50
+aruco_dict = aruco.DICT_4X4_50
 markerLength = 0.175
 
 # camera ----------------------------------------------------------------------
@@ -136,7 +137,7 @@ class ArUcoStreamer(threading.Thread):
                         plt.draw()    # update plot
 
                 # draw
-                cv.aruco.drawDetectedMarkers(frame, corners)
+                aruco.drawDetectedMarkers(frame, corners)
 
                 cv.imshow('View', frame)
                 cv.waitKey(1)

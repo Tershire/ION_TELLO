@@ -13,7 +13,7 @@ guided by: https://docs.opencv.org/3.4/dd/d43/tutorial_py_video_display.html
 # IMPORT //////////////////////////////////////////////////////////////////////
 from djitellopy import Tello
 from streamer_with_text import Streamer
-from vision_tools import create_video
+from VisionTools import create_video
 from datetime import datetime
 
 

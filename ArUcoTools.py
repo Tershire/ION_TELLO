@@ -13,6 +13,7 @@ guided by: https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
 
 # IMPORT //////////////////////////////////////////////////////////////////////
 import cv2 as cv
+import cv2.aruco as aruco
 import numpy as np
 import threading
 import keyboard
@@ -21,7 +22,7 @@ import keyboard
 # SETTING /////////////////////////////////////////////////////////////////////
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
-aruco_dict = cv.aruco.DICT_4X4_50
+aruco_dict = aruco.DICT_4X4_50
 markerLength = 0.175
 
 # camera ----------------------------------------------------------------------
@@ -46,8 +47,8 @@ class MarkerTracker:
         self.cameraMatrix = cameraMatrix
         self.distCoeffs = distCoeffs
 
-        dictionary = cv.aruco.getPredefinedDictionary(aruco_dict)
-        parameters = cv.aruco.DetectorParameters()
+        dictionary = aruco.getPredefinedDictionary(aruco_dict)
+        parameters = aruco.DetectorParameters()
         self.dictionary = dictionary
         self.parameters = parameters
 
@@ -68,12 +69,12 @@ class MarkerTracker:
         gray = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
 
         # detect marker
-        detector = cv.aruco.ArucoDetector(self.dictionary, self.parameters)
+        detector = aruco.ArucoDetector(self.dictionary, self.parameters)
         corners, ids, rejected_img_points = detector.detectMarkers(gray)
         ids = np.ravel(ids)
 
         # draw detected marker
-        # cv.aruco.drawDetectedMarkers(frame, corners)  # aruco.drawDetectedMarkers(frame, corners, ids): NOT working
+        # aruco.drawDetectedMarkers(frame, corners)  # aruco.drawDetectedMarkers(frame, corners, ids): NOT working
 
         return corners, ids
 
@@ -130,7 +131,7 @@ class ArUcoStreamer(threading.Thread):
             _, _, frame = marker_tracker.get_pose(corners, ids)
 
             # draw
-            cv.aruco.drawDetectedMarkers(frame, corners)
+            aruco.drawDetectedMarkers(frame, corners)
 
             cv.imshow('View', frame)
             cv.waitKey(1)
@@ -156,8 +157,9 @@ if __name__ == "__main__":
     streamer.start()
 
     # wait for keyboard
-    while not keyboard.read_key():
-        pass
+    keyboard.wait("esc")
+    # while not keyboard.read_key():
+    #     pass
 
     # finish Thread
     streamer.stop()

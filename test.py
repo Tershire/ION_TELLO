@@ -13,7 +13,7 @@ guided by: https://github.com/damiafuentes/DJITelloPy
 
 # IMPORT //////////////////////////////////////////////////////////////////////
 from djitellopy import Tello
-from vision_tools import take_photo, create_video, Streamer, Recorder
+from VisionTools import take_photo, create_video, Streamer, Recorder
 
 
 # CONNECT TO TELLO ////////////////////////////////////////////////////////////
@@ -28,6 +28,7 @@ frame_read = tello.get_frame_read()
 
 # stream setup ----------------------------------------------------------------
 streamer = Streamer(frame_read)
+streamer.frame_read = tello.get_frame_read()
 
 # video setup -----------------------------------------------------------------
 fps = 30
@@ -61,3 +62,8 @@ streamer.stop()
 streamer.join()
 
 tello.streamoff()
+
+"""
+while True:
+    streamer.refresh_1/15Hz()
+"""
