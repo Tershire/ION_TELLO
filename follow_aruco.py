@@ -1,20 +1,9 @@
 """
-test_aruco_pose.py
-get real world pose of ArUco markers wrt. camera pose,
-then displays the pose on 3D quiver plot.
-
-# HOW TO USE
-0) run
-1) key input: space
-   it takes a photo. If ArUco markers are detected, it prints info & plots
-2) key input: esc then esc
-   it closes down
+follow_aruco.py
+Tello Edu drone follows an ArUco marker
 
 1st written by: Wonhee Lee
-1st written on: 2023 MAR 30
-referred: https://stackoverflow.com/questions/34588464/python-how-to-capture-image-from-webcam-on-click-using-opencv
-          https://stackoverflow.com/questions/19329039/plotting-animated-quivers-in-python
-          https://matplotlib.org/stable/gallery/mplot3d/subplot3d.html
+1st written on: 2023 APR 01
 """
 
 # IMPORT //////////////////////////////////////////////////////////////////////
@@ -26,16 +15,16 @@ import keyboard
 import ArUcoTools as aT
 import matplotlib.pyplot as plt
 import CalibrationTools as cT
+from djitellopy import Tello
 
 # SETTING /////////////////////////////////////////////////////////////////////
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
 aruco_dict = aruco.DICT_4X4_50
-markerLength = 17.5E-2    # [cm] marker side length
+markerLength = 17.5E-2  # [cm] marker side length
 
 # camera ----------------------------------------------------------------------
-camera_id = 0
-camera_name = 'laptop'
+camera_name = 'tello'
 
 # intrinsics
 calib_file_name = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\' + \
@@ -78,10 +67,10 @@ class VisionThread(threading.Thread):
     "Killable Thread" to show live stream
     """
 
-    def __init__(self, cap):
+    def __init__(self, frame_read):
         super(VisionThread, self).__init__()
         self._stop_event = threading.Event()
-        self.cap = cap
+        self.frame_read = frame_read
 
     def stop(self):
         self._stop_event.set()
@@ -94,7 +83,7 @@ class VisionThread(threading.Thread):
 
     def estimate_pose(self):
         while True:
-            ret, frame = self.cap.read()
+            frame = self.frame_read.frame
             cv.imshow('View', frame)
             k = cv.waitKey(1)
 
@@ -141,21 +130,25 @@ class VisionThread(threading.Thread):
                 cv.waitKey(1)
 
             if self.stopped():
-                cap.release()
                 cv.destroyAllWindows()
                 break
 
 
 # RUN /////////////////////////////////////////////////////////////////////////
 # setting ---------------------------------------------------------------------
-# create object
-cap = cv.VideoCapture(camera_id)
+# connect to tello
+tello = Tello()
+tello.connect()  # enter SDK mode
 
-marker_detector = aT.MarkerDetector(cap, aruco_dict, markerLength,
-                                   cameraMatrix, distCoeffs)
+# initiate visual stream
+tello.streamon()
+frame_read = tello.get_frame_read()
+
+marker_detector = aT.MarkerDetectorTello(frame_read, aruco_dict, markerLength,
+                                         cameraMatrix, distCoeffs)
 
 # create Thread
-vision_thread = VisionThread(cap)
+vision_thread = VisionThread(frame_read)
 
 # start Thread
 vision_thread.start()
@@ -171,3 +164,6 @@ keyboard.wait("esc")
 # finish Thread
 vision_thread.stop()
 vision_thread.join()
+
+# END /////////////////////////////////////////////////////////////////////////
+tello.streamoff()

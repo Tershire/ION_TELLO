@@ -21,9 +21,9 @@ frame_read = tello.get_frame_read()
 
 # SETTING /////////////////////////////////////////////////////////////////////
 dir_path = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\'
-camera_name = 'Tello'
+camera_name = 'tello'
 img_format = 'jpg'
-NUM_IMGS = 5
+NUM_IMGS = 35
 TIME_INTERVAL = 3
 
 # RUN /////////////////////////////////////////////////////////////////////////

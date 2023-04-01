@@ -17,25 +17,27 @@ import cv2.aruco as aruco
 import numpy as np
 import threading
 import keyboard
+import CalibrationTools as cT
 
 # SETTING /////////////////////////////////////////////////////////////////////
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
 aruco_dict = aruco.DICT_4X4_50
-markerLength = 0.175
+markerLength = 17.5E-2    # [cm] marker side length
 
 # camera ----------------------------------------------------------------------
 camera_id = 0
+camera_name = 'laptop'
 
-# temporary trials: actual calibration process must be implemented
-cameraMatrix = np.array([[543.05833681, 0., 326.0951866],
-                         [0., 542.67378833, 247.65515938],
-                         [0., 0., 1.]])
-distCoeffs = np.array([-0.28608759, 0.13647301, -0.00076189, 0.0014116, -0.06865808])
+# intrinsics
+calib_file_name = r'C:\Users\leewh\Documents\Academics\Research\FR\Drone\Calibration_Data\\' + \
+                  f'{camera_name}_intrinsics.yml'
+cameraMatrix, distCoeffs = cT.load_camera_intrinsics(calib_file_name)
 
 
 # CLASS ///////////////////////////////////////////////////////////////////////
-class MarkerTracker:
+# -----------------------------------------------------------------------------
+class MarkerDetector:
     """
     detect and estimate pose of each ArUco Marker
     """
@@ -100,7 +102,73 @@ class MarkerTracker:
 
         return rvecs, tvecs, frame
 
+# -----------------------------------------------------------------------------
+class MarkerDetectorTello:
+    """
+    detect and estimate pose of each ArUco Marker
+    """
 
+    def __init__(self, frame_read, aruco_dict, markerLength, cameraMatrix, distCoeffs):
+        self.frame_read = frame_read
+        self.aruco_dict = aruco_dict
+        self.markerLength = markerLength
+        self.cameraMatrix = cameraMatrix
+        self.distCoeffs = distCoeffs
+
+        dictionary = aruco.getPredefinedDictionary(aruco_dict)
+        parameters = aruco.DetectorParameters()
+        self.dictionary = dictionary
+        self.parameters = parameters
+
+        # marker corners
+        objectPoints0 = np.array([-markerLength / 2, +markerLength / 2, 0])
+        objectPoints1 = np.array([+markerLength / 2, +markerLength / 2, 0])
+        objectPoints2 = np.array([+markerLength / 2, -markerLength / 2, 0])
+        objectPoints3 = np.array([-markerLength / 2, -markerLength / 2, 0])
+        objectPoints = np.array([objectPoints0, objectPoints1,
+                                 objectPoints2, objectPoints3])
+        self.objectPoints = objectPoints
+
+    def get_marker_info(self):
+        """
+        get marker id list
+        """
+        frame = self.frame_read.frame
+        gray = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
+
+        # detect marker
+        detector = aruco.ArucoDetector(self.dictionary, self.parameters)
+        corners, ids, rejected_img_points = detector.detectMarkers(gray)
+        ids = np.ravel(ids)
+
+        # draw detected marker
+        # aruco.drawDetectedMarkers(frame, corners)  # aruco.drawDetectedMarkers(frame, corners, ids): NOT working
+
+        return corners, ids
+
+    def get_pose(self, corners, ids):
+        """
+        calculate each marker pose and draw corresponding axes
+        """
+        frame = self.frame_read.frame
+
+        rvecs, tvecs = {}, {}
+        if ids[0] is not None:
+            for i, id in enumerate(ids):
+                # calculate pose for each marker
+                ret, rvec, tvec = cv.solvePnP(self.objectPoints, corners[i],
+                                              self.cameraMatrix, self.distCoeffs)
+
+                rvecs[id] = rvec
+                tvecs[id] = tvec
+
+                # draw axis for each marker
+                cv.drawFrameAxes(frame, self.cameraMatrix, self.distCoeffs,
+                                 rvec, tvec, 0.1)
+
+        return rvecs, tvecs, frame
+
+# -----------------------------------------------------------------------------
 class ArUcoStreamer(threading.Thread):
     """
     "Killable Thread" to show live stream
@@ -124,12 +192,12 @@ class ArUcoStreamer(threading.Thread):
         # stream a video
         while True:
             # get marker info
-            corners, ids = marker_tracker.get_marker_info()
+            corners, ids = marker_detector.get_marker_info()
             print("ids:", ids)
             # aruco.drawAxis(frame, )
 
             # get pose
-            _, _, frame = marker_tracker.get_pose(corners, ids)
+            _, _, frame = marker_detector.get_pose(corners, ids)
 
             # draw
             aruco.drawDetectedMarkers(frame, corners)
@@ -148,8 +216,8 @@ if __name__ == "__main__":
     # create object
     cap = cv.VideoCapture(camera_id)
 
-    marker_tracker = MarkerTracker(cap, aruco_dict, markerLength,
-                                   cameraMatrix, distCoeffs)
+    marker_detector = MarkerDetector(cap, aruco_dict, markerLength,
+                                     cameraMatrix, distCoeffs)
 
     # create Thread
     streamer = ArUcoStreamer(cap)

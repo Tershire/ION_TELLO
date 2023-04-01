@@ -193,22 +193,22 @@ def undistort(file_name, cameraMatrix, distCoeffs, save_img):
 
 # FUNCTION: HELP //////////////////////////////////////////////////////////////
 # -----------------------------------------------------------------------------
-def save_camera_intrinsics(cameraMatrix, distCoeffs, dir_path):
+def save_camera_intrinsics(cameraMatrix, distCoeffs, file_name):
     """
     save camera matrix and distortion coefficients to path
     """
-    file = cv.FileStorage(dir_path, cv.FILE_STORAGE_WRITE)
+    file = cv.FileStorage(file_name, cv.FILE_STORAGE_WRITE)
     file.write('K', cameraMatrix)
     file.write('D', distCoeffs)
 
     file.release()
 
 
-def load_camera_intrinsics(dir_path):
+def load_camera_intrinsics(file_name):
     """
     load camera matrix and distortion coefficients from path
     """
-    file = cv.FileStorage(dir_path, cv.FILE_STORAGE_READ)
+    file = cv.FileStorage(file_name, cv.FILE_STORAGE_READ)
 
     cameraMatrix = file.getNode('K').mat()
     distCoeffs = file.getNode("D").mat()
