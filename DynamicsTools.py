@@ -12,7 +12,10 @@ import numpy as np
 
 # KINEMATICS //////////////////////////////////////////////////////////////////
 # -----------------------------------------------------------------------------
-def euclidean_to_homogeneous(x):
+def hom(x):
+    """
+    euclidean_to_homogeneous
+    """
     if x.ndim == 1:  # if x is vector
         x_hom = np.append(x, 1)
 
@@ -23,7 +26,10 @@ def euclidean_to_homogeneous(x):
     return x_hom
 
 
-def homogenous_to_euclidean(x_hom):
+def euc(x_hom):
+    """
+    homogenous_to_euclidean
+    """
     if x_hom.ndim == 1:  # if x is vector
         x = np.delete(x_hom, -1)
 
@@ -45,17 +51,36 @@ def E_hom(R, t):
 
 
 # -----------------------------------------------------------------------------
-def R_x(ang):
+# passive {x, y, z} rotations
+def R_x(ang, unit):
+    if unit == 'deg':
+        ang = np.deg2rad(ang)
+    elif unit == 'rad':
+        pass
+    else:
+        raise Exception("wrong unit: must be 'rad' or 'deg'")
     return np.array([[1, 0, 0],
                      [0, np.cos(ang), np.sin(ang)],
                      [0, -np.sin(ang), np.cos(ang)]])
 
-def R_y(ang):
+def R_y(ang, unit):
+    if unit == 'deg':
+        ang = np.deg2rad(ang)
+    elif unit == 'rad':
+        pass
+    else:
+        raise Exception("wrong unit: must be 'rad' or 'deg'")
     return np.array([[np.cos(ang), 0, -np.sin(ang)],
                      [0, 1, 0],
                      [np.sin(ang), 0, np.cos(ang)]])
 
-def R_z(ang):
+def R_z(ang, unit):
+    if unit == 'deg':
+        ang = np.deg2rad(ang)
+    elif unit == 'rad':
+        pass
+    else:
+        raise Exception("wrong unit: must be 'rad' or 'deg'")
     return np.array([[np.cos(ang), np.sin(ang), 0],
                      [-np.sin(ang), np.cos(ang), 0],
                      [0, 0, 1]])

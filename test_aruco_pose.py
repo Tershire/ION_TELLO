@@ -15,6 +15,7 @@ then displays the pose on 3D quiver plot.
 referred: https://stackoverflow.com/questions/34588464/python-how-to-capture-image-from-webcam-on-click-using-opencv
           https://stackoverflow.com/questions/19329039/plotting-animated-quivers-in-python
           https://matplotlib.org/stable/gallery/mplot3d/subplot3d.html
+          https://amroamroamro.github.io/mexopencv/matlab/cv.solvePnP.html
 """
 
 # IMPORT //////////////////////////////////////////////////////////////////////
