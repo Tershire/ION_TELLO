@@ -93,9 +93,15 @@ for ax in axs:
     ax.set_ylabel('y_{c}')
     ax.set_zlabel('z_{c}')
 
-axs[0].view_init(elev=+90, azim=-90, roll=-90)
+# marker as myself
+# axs[0].view_init(elev=+90, azim=-90, roll=-90)
+# axs[1].view_init(elev=0, azim=-90, roll=0)
+# axs[2].view_init(elev=0, azim=0, roll=0)
+
+# drone as myself
+axs[0].view_init(elev=+90, azim=-90, roll=+90)
 axs[1].view_init(elev=0, azim=-90, roll=0)
-axs[2].view_init(elev=0, azim=0, roll=0)
+axs[2].view_init(elev=0, azim=180, roll=0)
 
 
 # CLASS ///////////////////////////////////////////////////////////////////////
