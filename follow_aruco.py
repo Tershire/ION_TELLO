@@ -21,7 +21,7 @@ from djitellopy import Tello
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
 aruco_dict = aruco.DICT_4X4_50
-markerLength = 17.5E-2  # [cm] marker side length
+markerLength = 17.5e-2  # [cm] marker side length
 
 # camera ----------------------------------------------------------------------
 camera_name = 'tello'
