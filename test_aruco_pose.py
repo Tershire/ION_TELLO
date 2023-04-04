@@ -166,6 +166,9 @@ vision_thread.start()
 plt.show()
 
 # wait for keyboard
+# while True:
+#     if keyboard.is_pressed('esc'):
+#         break
 keyboard.wait("esc")
 
 # ending ----------------------------------------------------------------------

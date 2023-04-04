@@ -5,8 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0949fd09-c775-4afe-b157-cdb2d4e2cb2c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/test_delta_yaw.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_threading.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/follow_aruco.py" beforeDir="false" afterPath="$PROJECT_DIR$/follow_aruco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_aruco_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_aruco_pose.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_aruco_pose_tello.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_aruco_pose_tello.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

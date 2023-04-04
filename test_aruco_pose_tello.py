@@ -27,6 +27,7 @@ import DynamicsTools as dT
 from DynamicsTools import hom, euc, E_hom
 
 # SETTING /////////////////////////////////////////////////////////////////////
+n = 0
 # ArUco -----------------------------------------------------------------------
 # dictionary choice
 aruco_dict = aruco.DICT_4X4_50
@@ -43,6 +44,7 @@ cameraMatrix, distCoeffs = cT.load_camera_intrinsics(calib_file_name)
 
 # drone properties ------------------------------------------------------------
 l = 3.8e-2    # distance camera to drone CG
+CAMERA_TILT = +7    # [deg] camera tilt angle (positive(+) when looking down)
 
 # frame relationship ----------------------------------------------------------
 """
@@ -52,7 +54,8 @@ ex) o_b_b: origin of body in body frame
 o_b_b = np.array([0, 0, 0])    # origin of drone
 i_b_b = np.array([1, 0, 0])    # x unit vector of drone
 
-R_bc = dT.R_x(+90, 'deg') @ dT.R_y(-90, 'deg')
+R_bc = dT.R_z(+90, 'deg') @ dT.R_x(+90 + CAMERA_TILT, 'deg')
+# R_bc = dT.R_x(+90, 'deg') @ dT.R_y(-90, 'deg')
 t_bc = l * +i_b_b
 
 E_hom_bc = E_hom(R_bc, t_bc)    # Euclidean frame transform from c to b
@@ -125,10 +128,14 @@ class VisionThread(threading.Thread):
         self.estimate_pose()
 
     def estimate_pose(self):
+        global n
+
         while True:
             ret, frame = self.cap.read()
             cv.imshow('View', frame)
             k = cv.waitKey(1)
+
+            print(n)
 
             if k % 256 == 27:  # esc
                 plt.close()
@@ -160,7 +167,7 @@ class VisionThread(threading.Thread):
                         k_m_b = R_bc @ R_cm @ k_m_m
 
                         # scale
-                        k_m_b_scaled = k_m_b * 0.1
+                        k_m_b_scaled = k_m_b * 0.5
 
                         for ax in axs:
                             ax.quiver(o_m_b[0], o_m_b[1], o_m_b[2],
@@ -181,6 +188,32 @@ class VisionThread(threading.Thread):
                 cv.destroyAllWindows()
                 break
 
+# -----------------------------------------------------------------------------
+class TestThread(threading.Thread):
+    """
+    "Killable Thread" to show live stream
+    """
+
+    def __init__(self):
+        super(TestThread, self).__init__()
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+    def run(self):
+        self.func()
+
+    def func(self):
+        global n
+
+        while True:
+            n += 1
+            print(n)
+
 
 # RUN /////////////////////////////////////////////////////////////////////////
 # setting ---------------------------------------------------------------------
@@ -192,18 +225,26 @@ marker_detector = aT.MarkerDetector(cap, aruco_dict, markerLength,
 
 # create Thread
 vision_thread = VisionThread(cap)
+testThread = TestThread()
 
 # start Thread
 vision_thread.start()
+testThread.start()
 
 # main thread -----------------------------------------------------------------
 # show plot
 plt.show()
 
 # wait for keyboard
+while True:
+    n += 1
+    print("main", n)
 keyboard.wait("esc")
 
 # ending ----------------------------------------------------------------------
 # finish Thread
 vision_thread.stop()
 vision_thread.join()
+
+testThread.stop()
+testThread.join()
