@@ -7,6 +7,7 @@ Tello Edu drone follows an ArUco marker
 referred: http://pythonstudy.xyz/python/article/24-%EC%93%B0%EB%A0%88%EB%93%9C-Thread
           https://wikidocs.net/82581
           https://stackoverflow.com/questions/52839758/matplotlib-and-runtimeerror-main-thread-is-not-in-main-loop
+          https://stackoverflow.com/questions/56656777/userwarning-matplotlib-is-currently-using-agg-which-is-a-non-gui-backend-so
 
 NOTATION: p_a_b: p of a in b frame
           ex) o_b_b: origin of body in body frame
@@ -22,7 +23,6 @@ import threading
 import keyboard
 import ArUcoTools as aT
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')    # RuntimeError: main thread is not in main loop
 import CalibrationTools as cT
 import DynamicsTools as dT
 from DynamicsTools import hom, euc, E_hom
@@ -171,8 +171,6 @@ class VisionThread(threading.Thread):
                 k_t_b = R_bc @ R_cm @ R_mt @ k_t_t
                 # k_m_b = R_bc @ R_cm @ k_m_m
 
-                print("\ro_t_b:", o_t_b)
-
                 for ax in axs:
                     ax.quiver(o_t_b[0], o_t_b[1], o_t_b[2],
                               k_t_b[0], k_t_b[1], k_t_b[2], color='b')
@@ -209,8 +207,10 @@ def follow():
 
     if psi > 0:
         tello.rotate_counter_clockwise(int(np.rad2deg(psi)))
+        print("psi [deg]:", np.rad2deg(psi))
     elif psi < 0:
         tello.rotate_clockwise(int(np.rad2deg(abs(psi))))
+        print("psi [deg]:", np.rad2deg(psi))
     else:
         pass
 
@@ -220,6 +220,8 @@ def follow():
                        int(o_t_b_in_cm[1]),
                        int(o_t_b_in_cm[2]),
                        int(speed))
+
+    print("o_t_b [cm]:", o_t_b_in_cm)
 
 def get_delta_yaw():
     """
