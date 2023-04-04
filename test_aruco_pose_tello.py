@@ -159,9 +159,12 @@ class VisionThread(threading.Thread):
                         # orientation
                         k_m_b = R_bc @ R_cm @ k_m_m
 
+                        # scale
+                        k_m_b_scaled = k_m_b * 0.1
+
                         for ax in axs:
                             ax.quiver(o_m_b[0], o_m_b[1], o_m_b[2],
-                                      k_m_b[0], k_m_b[1], k_m_b[2], color='b')
+                                      k_m_b_scaled[0], k_m_b_scaled[1], k_m_b_scaled[2], color='b')
 
                         print("o_m_b:\n", o_m_b)
 
