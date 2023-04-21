@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 import CalibrationTools as cT
 import DynamicsTools as dT
 from DynamicsTools import hom, euc, E_hom
+import time
 
 # GLOBAL VARIABLE /////////////////////////////////////////////////////////////
 # control & guidance ----------------------------------------------------------
@@ -87,7 +88,7 @@ print('o_c_b:', o_c_b)
 print('k_c_b:', k_c_b)
 
 # transform: target to marker
-R_mt = np.zeros((3, 3))
+R_mt = np.eye(3)
 t_mt = l * +k_m_m
 E_hom_mt = E_hom(R_mt, t_mt)  # Euclidean frame transform from t to m
 
@@ -129,7 +130,7 @@ for ax in axs:
 # drone as myself
 axs[0].view_init(elev=+90, azim=-90, roll=+90)
 axs[1].view_init(elev=0, azim=-90, roll=0)
-axs[2].view_init(elev=0, azim=180, roll=0)
+# axs[2].view_init(elev=0, azim=180, roll=0)
 
 
 # FUNCTIONS TO THREAD /////////////////////////////////////////////////////////
@@ -177,10 +178,14 @@ class VisionThread(threading.Thread):
                 # position
                 o_t_b = euc(E_hom_bc @ E_hom(R_cm, t_cm) @ hom(o_t_m))
                 # o_m_b = euc(E_hom_bc @ E_hom(R_cm, t_cm) @ hom(o_m_m))
+                print("o_t_b: ", o_t_b)
 
-                # orientation
+                # orientation`
                 k_t_b = R_bc @ R_cm @ R_mt @ k_t_t
                 # k_m_b = R_bc @ R_cm @ k_m_m
+                print("k_t_b: ", k_t_b)
+
+                follow()
 
                 for ax in axs:
                     ax.quiver(o_t_b[0], o_t_b[1], o_t_b[2],
@@ -291,6 +296,8 @@ def follow():
         else:
             pass
 
+        # time.sleep(3)
+
         # translate
         o_t_b_in_cm = o_t_b * 100
         tello.go_xyz_speed(int(o_t_b_in_cm[0]),
@@ -304,8 +311,8 @@ def follow():
         #                       int(K_Z * o_t_b[2]),
         #                       int(K_psi * psi))
 
-        print("o_t_b [cm]:", o_t_b * 100)
-        print("k_t_b     :", k_t_b)
+        # print("o_t_b [cm]:", o_t_b * 100)
+        # print("k_t_b     :", k_t_b)
 
 def get_delta_yaw():
     """
@@ -318,7 +325,7 @@ def get_delta_yaw():
        k_t_b is not None:
         k_t_b_proj = k_t_b[0:2]  # normal of target projected on {x_b, y_b} plane
         if k_t_b_proj[0] < 0:  # if drone is confronting marker
-            psi = np.arccos(np.dot(-k_t_b_proj, i_b_b[0:2]))
+            psi = np.arccos(np.dot(-k_t_b_proj / np.linalg.norm(k_t_b_proj), i_b_b[0:2]))
 
             # set yaw direction because psi is [0, pi]
             if k_t_b_proj[1] > 0:
@@ -352,16 +359,22 @@ vision_thread.daemon = True  # end this thread whenever main thread ends
 # control_thread = ControlThread()
 # control_thread.daemon = True  # end this thread whenever main thread ends
 
-vision_thread.start()
+# vision_thread.start()
 # control_thread.start()
 
 # main thread =================================================================
 tello.takeoff()
 
+vision_thread.start()
+
+# plt.show()
+
 # keyboard.wait("esc")
+# print("Flight Ended by the User. Landing...")
+
 while True:
-    follow()
-    # plt.show()
+    # follow()
+
 
     if tello.get_height() < MIN_HEIGHT or keyboard.is_pressed('esc'):  # esc
         print("Flight Ended by the User. Landing...")

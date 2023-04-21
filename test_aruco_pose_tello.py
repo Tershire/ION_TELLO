@@ -236,9 +236,9 @@ testThread.start()
 plt.show()
 
 # wait for keyboard
-while True:
-    n += 1
-    print("main", n)
+# while True:
+#     n += 1
+#     print("main", n)
 keyboard.wait("esc")
 
 # ending ----------------------------------------------------------------------

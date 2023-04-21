@@ -42,7 +42,7 @@ k_t_b = None  # target orientation in drone body frame
 id_to_follow = 6  # id  of ArUco marker to follow
 ids = []  # ids of detected ArUco markers
 speed = 10  # drone flight speed [cm/s] (limit: [10, 100])
-l = 45e-2  # gap between marker and sensor [m]
+l = 5e-2  # gap between marker and sensor [m]
 
 # GLOBAL CONSTANT /////////////////////////////////////////////////////////////
 # drone properties ------------------------------------------------------------
@@ -140,7 +140,7 @@ for ax in axs:
 # drone as myself
 axs[0].view_init(elev=+90, azim=-90, roll=+90)
 axs[1].view_init(elev=0, azim=-90, roll=0)
-# axs[2].view_init(elev=0, azim=180, roll=0)
+axs[2].view_init(elev=0, azim=180, roll=0)
 
 
 # CLASS ///////////////////////////////////////////////////////////////////////
@@ -179,6 +179,8 @@ class VisionThread(threading.Thread):
                 break
 
             elif k % 256 == 32:  # space
+                lock.acquire()
+
                 # get marker info
                 corners, ids = marker_detector.get_marker_info()
                 # print("ids:", ids)
@@ -197,12 +199,12 @@ class VisionThread(threading.Thread):
                         # position
                         o_t_b = euc(E_hom_bc @ E_hom(R_cm, t_cm) @ hom(o_t_m))
                         # o_m_b = euc(E_hom_bc @ E_hom(R_cm, t_cm) @ hom(o_m_m))
-                        print("o_t_b: ", o_t_b)
+                        print(o_t_b)
 
                         # orientation
                         k_t_b = R_bc @ R_cm @ R_mt @ k_t_t
                         # k_m_b = R_bc @ R_cm @ k_m_m
-                        print("k_t_b: ", k_t_b)
+                        print(k_t_b)
 
                         for ax in axs:
                             ax.quiver(o_t_b[0], o_t_b[1], o_t_b[2],
@@ -210,7 +212,9 @@ class VisionThread(threading.Thread):
 
                         plt.draw()  # update plot
 
-                        follow()
+                        lock.release()
+
+                        # follow()
 
                     # draw
                     aruco.drawDetectedMarkers(frame, corners)
@@ -235,6 +239,8 @@ def follow():
     """
     global o_t_b, k_t_b, ids
 
+    lock.acquire()
+
     # k = cv.waitKey(1)
     # if k % 256 == 32:
     
@@ -247,16 +253,16 @@ def follow():
 
         if psi > 0:
             # tello.rotate_counter_clockwise(int(np.rad2deg(psi)))
-            with lock:
-                print("psi [deg]:", np.rad2deg(psi), flush=True)
-                sys.stdout.flush()
+            print("psi [deg]:", np.rad2deg(psi), flush=True)
+            sys.stdout.flush()
         elif psi < 0:
             # tello.rotate_clockwise(int(np.rad2deg(abs(psi))))
-            with lock:
-                print("psi [deg]:", np.rad2deg(psi), flush=True)
-                sys.stdout.flush()
+            print("psi [deg]:", np.rad2deg(psi), flush=True)
+            sys.stdout.flush()
         else:
             pass
+
+    lock.release()
 
         # translate
         # o_t_b_in_cm = o_t_b * 100
@@ -271,16 +277,10 @@ def follow():
         #                       int(K_Z * o_t_b[2]),
         #                       int(K_psi * psi))
 
-        print("rc command: ", round(K_X * o_t_b[0]),
-                              round(K_Y * o_t_b[1]),
-                              round(K_Z * o_t_b[2]),
-                              round(K_psi * psi))
-
-        # with lock:
-        #     print("o_t_b:", o_t_b, flush=True)
-        #     sys.stdout.flush()
-        #     print("k_t_b:", k_t_b, flush=True)
-        #     sys.stdout.flush()
+        # print("o_t_b:", o_t_b, flush=True)
+        # sys.stdout.flush()
+        # print("k_t_b:", k_t_b, flush=True)
+        # sys.stdout.flush()
 
 
 def get_delta_yaw():
@@ -294,7 +294,7 @@ def get_delta_yaw():
        k_t_b is not None:
         k_t_b_proj = k_t_b[0:2]  # normal of target projected on {x_b, y_b} plane
         if k_t_b_proj[0] < 0:  # if drone is confronting marker
-            psi = np.arccos(np.dot(-k_t_b_proj / np.linalg.norm(k_t_b_proj), i_b_b[0:2]))
+            psi = np.arccos(np.dot(-k_t_b_proj, i_b_b[0:2]))
 
             # set yaw direction because psi is [0, pi]
             if k_t_b_proj[1] > 0:
@@ -325,15 +325,14 @@ vision_thread.start()
 # show plot
 plt.show()
 
-# while True:
-#     follow()
-#
-#     if keyboard.is_pressed('esc'):  # esc
-#         print("Flight Ended by the User. Landing...")
-#         break
+while True:
+    follow()
+
+    if keyboard.is_pressed('esc'):  # esc
+        print("Flight Ended by the User. Landing...")
+        break
 
 keyboard.wait("esc")
-print("Flight Ended by the User. Landing...")
 
 # ending ----------------------------------------------------------------------
 # finish Thread
