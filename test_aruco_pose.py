@@ -39,7 +39,7 @@ import sys
 # control & guidance ----------------------------------------------------------
 o_t_b = None  # target position    in drone body frame
 k_t_b = None  # target orientation in drone body frame
-id_to_follow = 6  # id  of ArUco marker to follow
+id_to_follow = 3  # id  of ArUco marker to follow
 ids = []  # ids of detected ArUco markers
 speed = 10  # drone flight speed [cm/s] (limit: [10, 100])
 l = 45e-2  # gap between marker and sensor [m]
